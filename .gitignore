@@ -1,0 +1,23 @@
+# Dependencias
+node_modules/
+**/node_modules/
+
+# Variables de entorno (¡NUNCA subir credenciales!)
+.env
+.env.local
+**/.env
+**/.env.local
+
+# Build del frontend
+frontend/dist/
+
+# PDFs generados en runtime
+backend/pdf/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

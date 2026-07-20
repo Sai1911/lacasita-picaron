@@ -1,0 +1,54 @@
+# ============================================================
+# Render Blueprint - La Casita del Picarón
+# Crea 3 servicios: base de datos PostgreSQL, backend (API) y
+# frontend (sitio estático).
+#
+# Uso: en Render → "New +" → "Blueprint" → conecta este repo.
+# Tras el primer deploy quedan algunas variables por completar
+# a mano (ver README-DEPLOY.md), porque dependen de las URLs
+# que Render asigna a cada servicio.
+# ============================================================
+
+databases:
+  - name: lacasita-db
+    databaseName: lacasitadpicaron
+    plan: free
+
+services:
+  # ---------------- Backend (API Node/Express) ----------------
+  - type: web
+    name: lacasita-backend
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install
+    startCommand: node index.js
+    healthCheckPath: /
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lacasita-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true          # Render genera una clave segura
+      - key: FRONTEND_URL
+        sync: false                  # Completar con la URL del frontend
+      - key: ENABLE_DEV_ROUTES
+        value: "false"               # Ponlo en "true" solo para sembrar datos
+
+  # ---------------- Frontend (Vite / estático) ----------------
+  - type: web
+    name: lacasita-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false                  # https://lacasita-backend.onrender.com/api
+      - key: VITE_SOCKET_URL
+        sync: false                  # https://lacasita-backend.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
