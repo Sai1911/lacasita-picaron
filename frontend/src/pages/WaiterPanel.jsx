@@ -427,12 +427,22 @@ export default function WaiterPanel() {
             currentOrder.items.length ? (
               <>
                 {currentOrder.items.map((i, idx) => (
-                  <div key={`${i.id_platillo}-${idx}`} className="mb-1">
-                    <div className="flex justify-between text-sm">
-                      <span>
+                  <div key={`${i.id_platillo}-${idx}`} className="mb-1.5">
+                    <div className="flex justify-between text-sm items-start gap-2">
+                      <span className="flex-1">
                         {i.quantity} x {i.name}
+                        {/* Estado de la línea: cocina marca cada platillo */}
+                        {i.estado === "listo" ? (
+                          <span className="ml-1.5 text-[10px] font-semibold text-green-700 bg-green-100 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                            ✓ listo
+                          </span>
+                        ) : (
+                          <span className="ml-1.5 text-[10px] font-semibold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                            en cocina
+                          </span>
+                        )}
                       </span>
-                      <span>
+                      <span className="whitespace-nowrap">
                         S/ {(Number(i.price ?? 0) * i.quantity).toFixed(2)}
                       </span>
                     </div>

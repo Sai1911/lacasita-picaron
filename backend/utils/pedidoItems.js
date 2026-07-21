@@ -18,6 +18,8 @@ function mapearFila(r) {
     price: Number(r.precio_unitario),
     quantity: Number(r.cantidad),
     nota: r.nota || "",
+    // 'pendiente' = por preparar · 'listo' = ya salió de cocina
+    estado: r.estado || "pendiente",
   };
 }
 
@@ -25,7 +27,7 @@ function mapearFila(r) {
 async function obtenerItems(idPedido, conn = db) {
   const [rows] = await conn.query(
     `SELECT d.id_detalle, d.id_platillo, d.cantidad, d.precio_unitario, d.nota,
-            pl.nombre
+            d.estado, pl.nombre
      FROM detalle_comanda d
      JOIN platillo pl ON pl.id_platillo = d.id_platillo
      WHERE d.id_pedido = ?
@@ -43,7 +45,7 @@ async function obtenerItemsDeVarios(idsPedido, conn = db) {
   const marcadores = idsPedido.map(() => "?").join(",");
   const [rows] = await conn.query(
     `SELECT d.id_pedido, d.id_detalle, d.id_platillo, d.cantidad,
-            d.precio_unitario, d.nota, pl.nombre
+            d.precio_unitario, d.nota, d.estado, pl.nombre
      FROM detalle_comanda d
      JOIN platillo pl ON pl.id_platillo = d.id_platillo
      WHERE d.id_pedido IN (${marcadores})

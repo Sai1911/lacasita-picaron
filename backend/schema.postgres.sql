@@ -169,11 +169,17 @@ CREATE TABLE IF NOT EXISTS detalle_comanda (
   cantidad        INT NOT NULL CHECK (cantidad > 0),
   precio_unitario NUMERIC(10,2) NOT NULL,
   -- Indicación para cocina: "sin cebolla", "término medio"...
-  nota            VARCHAR(255)
+  nota            VARCHAR(255),
+  -- Estado por línea: permite que la mesa tenga UNA sola cuenta abierta
+  -- y que cocina reciba solo los platillos que faltan por preparar.
+  estado          VARCHAR(20) NOT NULL DEFAULT 'pendiente'
+                    CHECK (estado IN ('pendiente', 'listo')),
+  fecha_listo     TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_detalle_pedido ON detalle_comanda (id_pedido);
 CREATE INDEX IF NOT EXISTS idx_detalle_platillo ON detalle_comanda (id_platillo);
+CREATE INDEX IF NOT EXISTS idx_detalle_estado ON detalle_comanda (estado);
 
 -- -----------------------------------------------------
 -- Tabla: reportecierre

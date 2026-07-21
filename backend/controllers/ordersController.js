@@ -56,32 +56,42 @@ exports.createOrder = async (req, res) => {
         throw err;
       }
 
-      // Buscar pedido abierto de esa mesa (ya serializado por el bloqueo)
+      // Una mesa tiene UNA SOLA cuenta abierta hasta que se cobra.
+      // Se busca cualquier pedido no pagado ni anulado —incluido el que
+      // ya salió de cocina o ya se envió a caja— para acumular en él.
+      // Antes se abría un pedido nuevo en esos casos, lo que partía la
+      // cuenta de la mesa y generaba dos comprobantes por un mismo consumo.
       const [[existing]] = await tx.query(
         `SELECT id_pedido, estado
          FROM pedidos
          WHERE id_mesa = ?
-           AND estado IN ('pendiente', 'listo', 'servido')
+           AND estado IN ('pendiente', 'listo', 'servido', 'por_pagar')
          ORDER BY fecha_creacion DESC
          LIMIT 1`,
         [tableId]
       );
 
-      // 🟢 Caso 1: hay un pedido PENDIENTE → se acumulan los platillos
-      // 🔥 Caso 2: el anterior ya salió de cocina → se abre uno nuevo
-      // 🆕 Caso 3: la mesa no tenía pedido → se abre el primero
       let idPedido;
       let mensaje;
 
-      if (existing && existing.estado === "pendiente") {
+      if (existing) {
+        // 🟢 Ya hay cuenta abierta → se acumulan los platillos en ella.
         idPedido = existing.id_pedido;
-        mensaje = "Pedido actualizado (merge)";
+        mensaje =
+          existing.estado === "por_pagar"
+            ? "Platillos añadidos a la cuenta (regresa a cocina)"
+            : "Pedido actualizado (merge)";
 
+        // Al llegar platillos nuevos la cuenta vuelve a estar pendiente,
+        // porque hay comida por preparar.
         await tx.query(
-          `UPDATE pedidos SET fecha_creacion = NOW() WHERE id_pedido = ?`,
+          `UPDATE pedidos
+           SET estado = 'pendiente', fecha_creacion = NOW()
+           WHERE id_pedido = ?`,
           [idPedido]
         );
       } else {
+        // 🆕 La mesa no tenía cuenta abierta → se abre la primera.
         const [result] = await tx.query(
           `INSERT INTO pedidos (id_mesa, id_personal, total, estado, fecha_creacion)
            VALUES (?, ?, 0, 'pendiente', NOW())`,
@@ -89,21 +99,22 @@ exports.createOrder = async (req, res) => {
         );
 
         idPedido = result.insertId;
-        mensaje = existing
-          ? "Nuevo pedido creado (por actualización)"
-          : "Pedido creado";
-
-        // La mesa queda ocupada y asignada al mozo que la atiende
-        await tx.query(
-          `UPDATE mesa
-           SET estado = 'Ocupada', id_personal_asignado = ?
-           WHERE id_mesa = ?`,
-          [waiterId, tableId]
-        );
+        mensaje = "Pedido creado";
       }
 
-      // El detalle ahora son filas reales. Un platillo repetido con la
-      // MISMA nota suma cantidad; con otra nota va en su propia línea.
+      // La mesa queda ocupada y asignada al mozo que la atiende
+      await tx.query(
+        `UPDATE mesa
+         SET estado = 'Ocupada', id_personal_asignado = ?
+         WHERE id_mesa = ?`,
+        [waiterId, tableId]
+      );
+
+      // Acumulación del detalle. Un platillo repetido con la MISMA nota
+      // suma cantidad, pero SOLO si esa línea sigue pendiente de preparar.
+      // Si la línea ya fue marcada como lista por cocina, los platillos
+      // nuevos van en una línea aparte: de lo contrario cocina no sabría
+      // cuántas unidades le quedan por preparar.
       for (const item of normalizedNewItems) {
         const [[linea]] = await tx.query(
           `SELECT id_detalle, cantidad
@@ -111,6 +122,7 @@ exports.createOrder = async (req, res) => {
            WHERE id_pedido = ?
              AND id_platillo = ?
              AND COALESCE(nota, '') = ?
+             AND estado = 'pendiente'
            LIMIT 1`,
           [idPedido, item.id_platillo, item.nota || ""]
         );
@@ -123,8 +135,8 @@ exports.createOrder = async (req, res) => {
         } else {
           await tx.query(
             `INSERT INTO detalle_comanda
-             (id_pedido, id_platillo, cantidad, precio_unitario, nota)
-             VALUES (?, ?, ?, ?, ?)`,
+             (id_pedido, id_platillo, cantidad, precio_unitario, nota, estado)
+             VALUES (?, ?, ?, ?, ?, 'pendiente')`,
             [
               idPedido,
               item.id_platillo,
