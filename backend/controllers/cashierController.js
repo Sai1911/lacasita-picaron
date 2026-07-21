@@ -1,26 +1,6 @@
 const db = require("../config/db");
-
-// ============================================================
-// Helpers de comprobante
-// ============================================================
-
-// Serie por tipo de comprobante (convención SUNAT simplificada)
-const SERIES = { boleta: "B001", factura: "F001" };
-
-// Calcula el siguiente correlativo a partir del último emitido.
-// Formato: B001-00000001 / F001-00000001
-function siguienteNumero(ultimo, tipo) {
-  const serie = SERIES[tipo] || SERIES.boleta;
-  let correlativo = 1;
-
-  if (ultimo) {
-    const partes = String(ultimo).split("-");
-    const n = parseInt(partes[partes.length - 1], 10);
-    if (!Number.isNaN(n)) correlativo = n + 1;
-  }
-
-  return `${serie}-${String(correlativo).padStart(8, "0")}`;
-}
+const { siguienteNumero } = require("../utils/comprobante");
+const { calcularMontoCobrado } = require("../utils/calculos");
 
 // Busca el cliente por su documento y lo crea si no existe.
 // Así los datos del cliente dejan de repetirse en cada pedido:
@@ -173,13 +153,14 @@ exports.payOrder = async (req, res) => {
       const desc = Number(descuento);
       const prop = Number(propina);
 
-      if (desc > subtotal) {
+      let montoCobrado;
+      try {
+        montoCobrado = calcularMontoCobrado(subtotal, desc, prop);
+      } catch {
         const err = new Error("DESCUENTO_EXCESIVO");
         err.code = "DESCUENTO_EXCESIVO";
         throw err;
       }
-
-      const montoCobrado = subtotal - desc + prop;
 
       // 1) Registrar el pago, ligado al turno de caja
       const [pago] = await tx.query(

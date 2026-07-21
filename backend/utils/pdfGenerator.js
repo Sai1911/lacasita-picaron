@@ -1,6 +1,5 @@
 const PDFDocument = require('pdfkit');
-
-const IGV = 0.18; // Los precios del menú ya incluyen IGV
+const { desglosarIGV } = require('./calculos');
 
 // ============================================================
 // Genera el comprobante y lo escribe directamente en el stream
@@ -91,10 +90,7 @@ exports.streamOrderPDF = (order, stream) => {
 
   if (esComprobante) {
     // La propina no está afecta a IGV; se descuenta antes de calcularlo.
-    const baseImponible = subtotal - descuento;
-    const opGravada = baseImponible / (1 + IGV);
-    const igv = baseImponible - opGravada;
-
+    const { opGravada, igv } = desglosarIGV(subtotal - descuento);
     doc.text(`Op. Gravada: S/ ${opGravada.toFixed(2)}`, { align: 'right' });
     doc.text(`IGV (18%): S/ ${igv.toFixed(2)}`, { align: 'right' });
   }
