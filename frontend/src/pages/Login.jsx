@@ -71,53 +71,78 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100">
-      <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">
-          Sistema de Restaurante
-        </h1>
-
-        {errorMsg && (
-          <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">
-            {errorMsg}
+    <div className="min-h-screen flex items-center justify-center p-4
+                    bg-gradient-to-br from-brand-100 via-crema to-terracota-100">
+      <div className="w-full max-w-md">
+        {/* Marca */}
+        <div className="text-center mb-8">
+          <div className="mx-auto mb-3 flex h-20 w-20 items-center justify-center
+                          rounded-full bg-brand-500 shadow-soft text-4xl">
+            🍩
           </div>
-        )}
+          <h1 className="font-logo text-4xl text-brand-700 leading-tight">
+            La Casita del Picarón
+          </h1>
+          <p className="text-sm text-carbon/60 mt-1">
+            Sistema de comandas
+          </p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Código de acceso
-            </label>
-            <input
-              type="text"
-              className="w-full border rounded px-3 py-2"
-              value={codigoAcceso}
-              onChange={(e) => setCodigoAcceso(e.target.value)}
-              required
-            />
-          </div>
+        {/* Tarjeta de acceso */}
+        <div className="card p-8">
+          <h2 className="text-lg font-semibold mb-5 text-center text-carbon">
+            Iniciar sesión
+          </h2>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Contraseña
-            </label>
-            <input
-              type="password"
-              className="w-full border rounded px-3 py-2"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+          {errorMsg && (
+            <div className="mb-4 text-sm text-terracota-700 bg-terracota-50
+                            border border-terracota-100 rounded-lg p-3">
+              {errorMsg}
+            </div>
+          )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 rounded disabled:opacity-60"
-          >
-            {loading ? "Ingresando..." : "Entrar"}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1.5 text-carbon/80">
+                Código de acceso
+              </label>
+              <input
+                type="text"
+                className="field"
+                placeholder="ej. mozo1"
+                value={codigoAcceso}
+                onChange={(e) => setCodigoAcceso(e.target.value)}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1.5 text-carbon/80">
+                Contraseña
+              </label>
+              <input
+                type="password"
+                className="field"
+                placeholder="••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full py-2.5 text-base"
+            >
+              {loading ? "Ingresando…" : "Entrar"}
+            </button>
+          </form>
+        </div>
+
+        <p className="text-center text-xs text-carbon/40 mt-6">
+          © {new Date().getFullYear()} La Casita del Picarón
+        </p>
       </div>
     </div>
   );

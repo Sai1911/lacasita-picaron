@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import { getUser } from "../utils/auth";
 import { cerrarSesion } from "../utils/logout";
-import CambiarPassword from "../components/CambiarPassword";
+import AppHeader from "../components/AppHeader";
 
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState("menu");
@@ -16,28 +16,11 @@ export default function AdminPanel() {
   };
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <div className="min-h-screen bg-crema">
+      <AppHeader titulo="Panel de administración" usuario={user} onLogout={logout} />
 
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">
-          Panel de Administración
-        </h1>
-
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-600">
-            {user ? `${user.nombre} (Admin)` : "Admin"}
-          </span>
-          <CambiarPassword />
-          <button
-            onClick={logout}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded text-sm"
-          >
-            Salir
-          </button>
-        </div>
-      </div>
-
-      <div className="flex space-x-6 border-b pb-2 mb-6">
+      <div className="mx-auto max-w-7xl p-4 sm:p-6">
+      <div className="flex flex-wrap gap-4 sm:gap-6 border-b border-brand-200 pb-2 mb-6">
         <button
           onClick={() => setActiveTab("menu")}
           className={`${activeTab === "menu" ? "border-b-2 border-orange-500 font-bold" : "text-gray-600"}`}
@@ -71,6 +54,7 @@ export default function AdminPanel() {
       {activeTab === "staff" && <StaffSection />}
       {activeTab === "reports" && <ReportsSection />}
       {activeTab === "auditoria" && <AuditoriaSection />}
+      </div>
     </div>
   );
 }

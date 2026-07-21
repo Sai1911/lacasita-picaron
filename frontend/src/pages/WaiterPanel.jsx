@@ -5,7 +5,7 @@ import api from "../api/axios";
 import socket, { conectarSocket } from "../api/socket";
 import { resolveUser } from "../utils/auth";
 import { cerrarSesion } from "../utils/logout";
-import CambiarPassword from "../components/CambiarPassword";
+import AppHeader from "../components/AppHeader";
 
 export default function WaiterPanel() {
   const location = useLocation();
@@ -268,61 +268,66 @@ export default function WaiterPanel() {
     }
   };
 
+  const logout = async () => {
+    await cerrarSesion();
+    navigate("/");
+  };
+
   // ===================== VISTA: MESAS =====================
   if (!selectedTable) {
     return (
-      <div className="p-6 min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-crema">
+        <AppHeader titulo="Mozo · Mesas" usuario={user} onLogout={logout} />
+
+        <div className="mx-auto max-w-7xl p-4 sm:p-6">
         {notification && (
-          <div className="bg-blue-100 text-blue-800 text-center p-2 rounded mb-3">
+          <div className="bg-brand-100 text-brand-800 text-center p-2.5 rounded-lg mb-4 text-sm font-medium">
             {notification}
           </div>
         )}
 
-        <header className="flex justify-between mb-6">
-          <h1 className="text-xl font-bold">
-            Mesas – Mozo {user?.nombre || ""}
-          </h1>
-
-          <div className="flex items-center gap-3">
-          <CambiarPassword />
-          <button
-            onClick={async () => {
-              await cerrarSesion();
-              navigate("/");
-            }}
-            className="bg-red-600 px-4 py-2 text-white rounded"
-          >
-            Cerrar sesión
-          </button>
-          </div>
-        </header>
-
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {tables.map((mesa) => (
-            <div
-              key={mesa.id_mesa}
-              onClick={() => handleTableClick(mesa)}
-              className={`p-4 rounded shadow cursor-pointer text-center transition 
-                ${
-                  mesa.estado === "Ocupada"
-                    ? "bg-orange-300"
-                    : mesa.estado === "Por pagar"
-                    ? "bg-red-400"
-                    : "bg-green-300"
-                }`}
-            >
-              <h2 className="font-bold text-lg">Mesa {mesa.numero_mesa}</h2>
-              <p className="text-sm">{mesa.estado}</p>
-              {mesa.mozo_asignado && (
-                <p className="text-xs mt-1 opacity-75">
-                  {mesa.id_personal_asignado === user?.id_personal
-                    ? "Tu mesa"
-                    : `Atiende: ${mesa.mozo_asignado}`}
-                </p>
-              )}
-            </div>
-          ))}
+          {tables.map((mesa) => {
+            const estilo =
+              mesa.estado === "Ocupada"
+                ? "bg-white border-brand-400 ring-1 ring-brand-200"
+                : mesa.estado === "Por pagar"
+                ? "bg-white border-terracota-500 ring-1 ring-terracota-100"
+                : "bg-white border-emerald-400 ring-1 ring-emerald-100";
+
+            const punto =
+              mesa.estado === "Ocupada"
+                ? "bg-brand-500"
+                : mesa.estado === "Por pagar"
+                ? "bg-terracota-600"
+                : "bg-emerald-500";
+
+            return (
+              <button
+                key={mesa.id_mesa}
+                onClick={() => handleTableClick(mesa)}
+                className={`p-5 rounded-2xl border-l-4 shadow-card text-center transition
+                            hover:shadow-soft hover:-translate-y-0.5 ${estilo}`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <span className={`h-2.5 w-2.5 rounded-full ${punto}`} />
+                  <h2 className="font-bold text-lg text-carbon">
+                    Mesa {mesa.numero_mesa}
+                  </h2>
+                </div>
+                <p className="text-sm text-carbon/60 mt-1">{mesa.estado}</p>
+                {mesa.mozo_asignado && (
+                  <p className="text-xs mt-1 text-brand-600 font-medium">
+                    {mesa.id_personal_asignado === user?.id_personal
+                      ? "Tu mesa"
+                      : `Atiende: ${mesa.mozo_asignado}`}
+                  </p>
+                )}
+              </button>
+            );
+          })}
         </div>
+      </div>
       </div>
     );
   }
@@ -335,39 +340,32 @@ export default function WaiterPanel() {
       : [];
 
   return (
-    <div className="p-6 min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-crema">
+      <AppHeader
+        titulo={`Mesa ${selectedTable.numero_mesa}`}
+        usuario={user}
+        onLogout={logout}
+        right={
+          <button
+            onClick={() => {
+              setSelectedTable(null);
+              setCurrentOrder(null);
+              setNewItems([]);
+            }}
+            className="rounded-lg bg-white/10 px-3 py-1.5 text-sm font-semibold
+                       text-white hover:bg-white/20 transition"
+          >
+            ← Mesas
+          </button>
+        }
+      />
+
+      <div className="mx-auto max-w-7xl p-4 sm:p-6">
       {notification && (
-        <div className="bg-blue-100 text-blue-800 text-center p-2 rounded mb-3">
+        <div className="bg-brand-100 text-brand-800 text-center p-2.5 rounded-lg mb-4 text-sm font-medium">
           {notification}
         </div>
       )}
-
-      <div className="flex justify-between items-center mb-4">
-        <button
-          onClick={() => {
-            setSelectedTable(null);
-            setCurrentOrder(null);
-            setNewItems([]);
-          }}
-          className="bg-gray-700 text-white px-4 py-2 rounded"
-        >
-          Volver a Mesas
-        </button>
-
-        <h1 className="text-xl font-bold">
-          Mesa {selectedTable.numero_mesa} – Mozo {user?.nombre}
-        </h1>
-
-        <button
-          onClick={async () => {
-            await cerrarSesion();
-            navigate("/");
-          }}
-          className="bg-red-600 text-white px-4 py-2 rounded"
-        >
-          Cerrar sesión
-        </button>
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* MENÚ */}
@@ -567,6 +565,7 @@ export default function WaiterPanel() {
             </div>
           </div>
         </section>
+      </div>
       </div>
     </div>
   );

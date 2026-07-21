@@ -5,7 +5,7 @@ import api from "../api/axios";
 import socket, { conectarSocket } from "../api/socket";
 import { resolveUser } from "../utils/auth";
 import { cerrarSesion } from "../utils/logout";
-import CambiarPassword from "../components/CambiarPassword";
+import AppHeader from "../components/AppHeader";
 
 const KitchenPanel = () => {
   const location = useLocation();
@@ -93,27 +93,8 @@ const KitchenPanel = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-      {/* HEADER */}
-      <header className="bg-[#111827] text-white flex items-center justify-between px-6 py-3 shadow">
-        <span className="text-orange-500 font-bold text-lg">
-          La Casita del Picarón - Cocina
-        </span>
-        <div className="flex items-center space-x-4">
-          <span className="text-sm">
-            {user ? `${user.nombre} (${user.rol || "Cocina"})` : "Cocina"}
-          </span>
-          <div className="bg-white/10 px-2 py-1 rounded">
-            <CambiarPassword />
-          </div>
-          <button
-            onClick={handleLogout}
-            className="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-1.5 rounded"
-          >
-            Salir
-          </button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-crema flex flex-col">
+      <AppHeader titulo="Cocina" usuario={user} onLogout={handleLogout} />
 
       {/* CONTENIDO */}
       <main className="flex-1 p-6">

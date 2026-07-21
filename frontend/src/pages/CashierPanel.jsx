@@ -5,7 +5,7 @@ import api from "../api/axios";
 import socket, { conectarSocket } from "../api/socket";
 import { resolveUser } from "../utils/auth";
 import { cerrarSesion } from "../utils/logout";
-import CambiarPassword from "../components/CambiarPassword";
+import AppHeader from "../components/AppHeader";
 
 const soles = (n) => `S/ ${Number(n || 0).toFixed(2)}`;
 
@@ -219,27 +219,10 @@ export default function CashierPanel() {
 
   // ===================== RENDER =====================
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      {/* HEADER */}
-      <header className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          💰 Caja - Cuentas por Cobrar
-        </h1>
+    <div className="min-h-screen bg-crema">
+      <AppHeader titulo="Caja · Cuentas por cobrar" usuario={user} onLogout={logout} />
 
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-600">
-            {user ? `${user.nombre} (Caja)` : "Caja"}
-          </span>
-          <CambiarPassword />
-          <button
-            onClick={logout}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded text-sm"
-          >
-            Salir
-          </button>
-        </div>
-      </header>
-
+      <div className="mx-auto max-w-7xl p-4 sm:p-6">
       {/* ---------- BARRA DE TURNO DE CAJA ---------- */}
       {!cajaAbierta ? (
         <div className="bg-white border-l-4 border-yellow-500 p-4 rounded shadow mb-6">
@@ -579,6 +562,7 @@ export default function CashierPanel() {
           })}
         </div>
       )}
+      </div>
     </div>
   );
 }
